@@ -82,11 +82,11 @@ const imageAltTextMap = {
 
 const imageSizeMap = {
 	small: {
-		width: 60,
+		width: 45,
 		height: undefined,
 	},
 	large: {
-		width: 120,
+		width: 90,
 		height: undefined,
 	},
 };
