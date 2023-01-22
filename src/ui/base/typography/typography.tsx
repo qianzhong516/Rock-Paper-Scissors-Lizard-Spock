@@ -46,7 +46,7 @@ const StyledTextBase = styled(TextBase)`
 			: size === 'small'
 			? 'font-size: 18px'
 			: size === 'medium'
-			? 'font-size: 40px'
+			? 'font-size: 28px'
 			: size === 'large'
 			? 'font-size: 60px'
 			: ''};

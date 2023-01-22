@@ -6,6 +6,7 @@ import {
 	LizardIconSmall,
 	PaperIconSmall,
 } from '../action_icon/action_icon';
+import { IconType } from '../../base/icon/Icon';
 
 const PentagonBackground = ({
 	className,
@@ -20,7 +21,7 @@ const StyledPentagonBackground = styled(PentagonBackground)`
 	width: 400px;
 	height: 380px;
 	max-width: 100%;
-	margin: 100px auto;
+	margin: auto;
 	background-image: url('/assets/images/bg-pentagon.svg');
 	background-size: contain;
 	background-repeat: no-repeat;
@@ -55,22 +56,26 @@ const BottomRightAnchor = styled(BaseAnchor)`
 	left: calc(50% + 60px);
 `;
 
-export const InitialBoard = () => (
+export const InitialBoard = ({
+	onActionIconClick,
+}: {
+	onActionIconClick: (type: IconType) => void;
+}) => (
 	<StyledPentagonBackground>
 		<TopAnchor>
-			<ScissorsIconSmall />
+			<ScissorsIconSmall onClick={onActionIconClick} />
 		</TopAnchor>
 		<MiddleLeftAnchor>
-			<SpockIconSmall />
+			<SpockIconSmall onClick={onActionIconClick} />
 		</MiddleLeftAnchor>
 		<MiddleRightAnchor>
-			<PaperIconSmall />
+			<PaperIconSmall onClick={onActionIconClick} />
 		</MiddleRightAnchor>
 		<BottomLeftAnchor>
-			<LizardIconSmall />
+			<LizardIconSmall onClick={onActionIconClick} />
 		</BottomLeftAnchor>
 		<BottomRightAnchor>
-			<RockIconSmall />
+			<RockIconSmall onClick={onActionIconClick} />
 		</BottomRightAnchor>
 	</StyledPentagonBackground>
 );

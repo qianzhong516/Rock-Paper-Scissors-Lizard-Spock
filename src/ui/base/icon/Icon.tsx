@@ -6,13 +6,15 @@ export const enum IconType {
 	ROCK,
 	LIZARD,
 	SPOCK,
+	EMPTY,
 }
 
 type IconSize = 'small' | 'large';
 
-type ActionIconProps = {
+export type ActionIconProps = {
 	type: IconType;
 	size?: IconSize;
+	onClick?: (type: IconType) => void;
 };
 
 const CircleOutlineStyleMap: Record<IconType, string> = {
@@ -26,6 +28,7 @@ const CircleOutlineStyleMap: Record<IconType, string> = {
 		'background-image: linear-gradient(to bottom, hsl(261, 73%, 60%), hsl(261, 72%, 63%))',
 	[IconType.SPOCK]:
 		'background-image: linear-gradient(to bottom, hsl(189, 59%, 53%), hsl(189, 58%, 57%))',
+	[IconType.EMPTY]: 'background: transparent;',
 };
 
 const Circle = styled.div.attrs(
@@ -47,9 +50,13 @@ const Circle = styled.div.attrs(
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	background: #ffffff;
+	background: ${({ type }) =>
+		type === IconType.EMPTY ? 'hsl(217, 16%, 45%)' : '#ffffff'};
 	border-radius: 50%;
-	box-shadow: 0 5px 2px 0 rgba(0, 0, 0, 0.2) inset;
+	${({ type }) =>
+		type !== IconType.EMPTY
+			? 'box-shadow: 0 5px 2px 0 rgba(0, 0, 0, 0.2) inset;'
+			: 'opacity: 0.2'}
 `;
 
 const CircleOutline = styled.div.attrs(
@@ -91,7 +98,14 @@ const imageSizeMap = {
 	},
 };
 
-const ActionSvg = ({ type, size = 'small' }: ActionIconProps) => {
+const ActionSvg = ({
+	type,
+	size = 'small',
+}: Omit<ActionIconProps, 'onClick'>) => {
+	if (type === IconType.EMPTY) {
+		return <></>;
+	}
+
 	return (
 		<img
 			{...imageSizeMap[size]}
@@ -104,10 +118,12 @@ const ActionSvg = ({ type, size = 'small' }: ActionIconProps) => {
 	);
 };
 
-export const Icon = (props: ActionIconProps) => (
-	<CircleOutline {...props}>
-		<Circle {...props}>
-			<ActionSvg {...props} />
-		</Circle>
-	</CircleOutline>
-);
+export const Icon = ({ onClick, ...props }: ActionIconProps) => {
+	return (
+		<CircleOutline {...props} onClick={() => onClick?.(props.type)}>
+			<Circle {...props}>
+				<ActionSvg {...props} />
+			</Circle>
+		</CircleOutline>
+	);
+};
