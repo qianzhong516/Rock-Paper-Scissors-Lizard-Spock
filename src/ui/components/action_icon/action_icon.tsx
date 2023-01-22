@@ -1,4 +1,4 @@
-import { Icon, IconType } from '../../base/icon/Icon';
+import { Icon, IconType, EmptyIcon } from '../../base/icon/Icon';
 
 export const ScissorsIconSmall = ({
 	onClick,
@@ -30,7 +30,7 @@ export const SpockIconSmall = ({
 	onClick: (type: IconType) => void;
 }) => <Icon type={IconType.SPOCK} onClick={onClick} />;
 
-export const EmptyIconSmall = () => <Icon type={IconType.EMPTY} />;
+export const EmptyIconSmall = () => <EmptyIcon />;
 
 export const ScissorsIconLarge = () => (
 	<Icon size='large' type={IconType.SCISSORS} />
@@ -46,4 +46,4 @@ export const LizardIconLarge = () => (
 
 export const SpockIconLarge = () => <Icon size='large' type={IconType.SPOCK} />;
 
-export const EmptyIconLarge = () => <Icon size='large' type={IconType.EMPTY} />;
+export const EmptyIconLarge = () => <EmptyIcon size='large' />;

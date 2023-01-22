@@ -6,7 +6,6 @@ export const enum IconType {
 	ROCK,
 	LIZARD,
 	SPOCK,
-	EMPTY,
 }
 
 type IconSize = 'small' | 'large';
@@ -15,6 +14,7 @@ export type ActionIconProps = {
 	type: IconType;
 	size?: IconSize;
 	onClick?: (type: IconType) => void;
+	isEmpty?: boolean;
 };
 
 const CircleOutlineStyleMap: Record<IconType, string> = {
@@ -28,13 +28,13 @@ const CircleOutlineStyleMap: Record<IconType, string> = {
 		'background-image: linear-gradient(to bottom, hsl(261, 73%, 60%), hsl(261, 72%, 63%))',
 	[IconType.SPOCK]:
 		'background-image: linear-gradient(to bottom, hsl(189, 59%, 53%), hsl(189, 58%, 57%))',
-	[IconType.EMPTY]: 'background: transparent;',
 };
 
 const Circle = styled.div.attrs(
-	({ type, size = 'small' }: ActionIconProps) => ({
+	({ type, size = 'small', isEmpty }: ActionIconProps) => ({
 		size,
 		type,
+		isEmpty,
 	})
 )`
 	position: absolute;
@@ -50,19 +50,20 @@ const Circle = styled.div.attrs(
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	background: ${({ type }) =>
-		type === IconType.EMPTY ? 'hsl(217, 16%, 45%)' : '#ffffff'};
+	background: ${({ isEmpty }) =>
+		isEmpty ? 'hsl(217, 16%, 45%)' : '#ffffff'};
 	border-radius: 50%;
-	${({ type }) =>
-		type !== IconType.EMPTY
+	${({ isEmpty }) =>
+		!isEmpty
 			? 'box-shadow: 0 5px 2px 0 rgba(0, 0, 0, 0.2) inset;'
 			: 'opacity: 0.2'}
 `;
 
 const CircleOutline = styled.div.attrs(
-	({ type, size = 'small' }: ActionIconProps) => ({
+	({ type, size = 'small', isEmpty }: ActionIconProps) => ({
 		size,
 		type,
+		isEmpty,
 	})
 )`
 	position: relative;
@@ -77,6 +78,7 @@ const CircleOutline = styled.div.attrs(
 		}
 	}}
 	${({ type }) => CircleOutlineStyleMap[type]};
+	${({ isEmpty }) => isEmpty && 'background: transparent;'}
 `;
 
 const imageAltTextMap = {
@@ -101,8 +103,9 @@ const imageSizeMap = {
 const ActionSvg = ({
 	type,
 	size = 'small',
+	isEmpty,
 }: Omit<ActionIconProps, 'onClick'>) => {
-	if (type === IconType.EMPTY) {
+	if (isEmpty) {
 		return <></>;
 	}
 
@@ -124,6 +127,14 @@ export const Icon = ({ onClick, ...props }: ActionIconProps) => {
 			<Circle {...props}>
 				<ActionSvg {...props} />
 			</Circle>
+		</CircleOutline>
+	);
+};
+
+export const EmptyIcon = ({ size }: Pick<ActionIconProps, 'size'>) => {
+	return (
+		<CircleOutline size={size} isEmpty={true}>
+			<Circle size={size} isEmpty={true}></Circle>
 		</CircleOutline>
 	);
 };
