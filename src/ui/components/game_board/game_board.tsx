@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { InitialBoard } from './initial_board';
 import { ActionWithTitle } from '../action_icon/action_with_title';
 import { VersusBoard } from './versus_board';
+import { ResultBoard } from './result_board';
 import { IconType, Icon } from '../../base/icon/Icon';
 import styled from 'styled-components';
-import { game } from '../../../game';
+import { GameResult, game } from '../../../game';
 import type { Action } from '../../../game';
 import { EmptyIconLarge } from '../action_icon/action_icon';
+import { ResultDisplay } from '../result_display/result_display';
+import React from 'react';
 
 const enum GameStage {
 	INITIAL,
@@ -36,7 +39,6 @@ const GameBoardContainer = styled.div`
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	width: 800px;
 	max-width: 100%;
 	margin: 100px auto;
 `;
@@ -57,70 +59,136 @@ const iconTypeToActionMap: Record<IconType, Action> = {
 	[IconType.SPOCK]: 'spock',
 };
 
-export const GameBoard = () => {
-	const [gameStage, setGameStage] = useState<GameStage>(GameStage.INITIAL);
-	const [playerAction, setPlayerAction] = useState<Action>('scissors');
-	const [opponentAction, setOpponentAction] = useState<Action>('scissors');
+export const GameBoard = React.memo(
+	({
+		updateScore,
+	}: {
+		updateScore: React.Dispatch<React.SetStateAction<number>>;
+	}) => {
+		const [gameStage, setGameStage] = useState<GameStage>(
+			GameStage.INITIAL
+		);
+		const [playerAction, setPlayerAction] = useState<Action>('scissors');
+		const [opponentAction, setOpponentAction] =
+			useState<Action>('scissors');
+		const [isGameResultReady, setIsGameResultReady] = useState(false);
+		const [gameResult, setGameResult] = useState<GameResult | null>(null);
 
-	const onActionIconClick = (type: IconType) => {
-		setPlayerAction(iconTypeToActionMap[type]);
-		setGameStage(GameStage.PLAYER_PICKED);
-	};
+		useEffect(() => {
+			if (!isGameResultReady || gameResult == null) {
+				return;
+			}
 
-	const goToHousePickedStage = () => {
-		setTimeout(() => {
-			setOpponentAction(game.generateOpponentAction());
-			setGameStage(GameStage.HOUSE_PICKED);
-		}, 1000);
-	};
+			const updateGameScore = (result: GameResult) => {
+				switch (result) {
+					case GameResult.LOSE:
+						updateScore((prev) => (prev - 1 < 0 ? 0 : prev - 1));
+						break;
+					case GameResult.WIN:
+						updateScore((prev) => prev + 1);
+						break;
+					case GameResult.TIE:
+					default:
+						break;
+				}
+			};
+			updateGameScore(gameResult);
+		}, [updateScore, isGameResultReady, gameResult]);
 
-	const goToResultStage = () => {
-		setTimeout(() => {
-			setGameStage(GameStage.RESULT);
-		}, 1000);
-	};
+		const onActionIconClick = (type: IconType) => {
+			setPlayerAction(iconTypeToActionMap[type]);
+			setGameStage(GameStage.PLAYER_PICKED);
+		};
 
-	let Board: React.ReactElement | undefined;
-	switch (gameStage) {
-		case GameStage.INITIAL:
-			Board = <InitialBoard onActionIconClick={onActionIconClick} />;
-			break;
-		case GameStage.PLAYER_PICKED:
-			Board = (
-				<VersusBoard
-					PlayerAction={
-						<PartyAction
-							iconType={actionToIconTypeMap[playerAction]}
-							party='player'
-						/>
-					}
-					OpponentAction={<EmptyOpponentAction />}
-				/>
-			);
-			goToHousePickedStage();
-			break;
-		case GameStage.HOUSE_PICKED:
-			Board = (
-				<VersusBoard
-					PlayerAction={
-						<PartyAction
-							iconType={actionToIconTypeMap[playerAction]}
-							party='player'
-						/>
-					}
-					OpponentAction={
-						<PartyAction
-							iconType={actionToIconTypeMap[opponentAction]}
-							party='opponent'
-						/>
-					}
-				/>
-			);
-			goToResultStage();
-			break;
-		default:
-			return <></>;
+		const goToHousePickedStage = () => {
+			setTimeout(() => {
+				setOpponentAction(game.generateOpponentAction());
+				setGameStage(GameStage.HOUSE_PICKED);
+			}, 1000);
+		};
+
+		const goToResultStage = () => {
+			setTimeout(() => {
+				setGameResult(game.getResult(playerAction, opponentAction));
+				setIsGameResultReady(true);
+				setGameStage(GameStage.RESULT);
+			}, 1000);
+		};
+
+		const handlePlayAgain = () => {
+			setGameResult(null);
+			setIsGameResultReady(false);
+			setGameStage(GameStage.INITIAL);
+		};
+
+		let Board: React.ReactElement | undefined;
+		switch (gameStage) {
+			case GameStage.INITIAL:
+				Board = <InitialBoard onActionIconClick={onActionIconClick} />;
+				break;
+			case GameStage.PLAYER_PICKED:
+				Board = (
+					<VersusBoard
+						PlayerAction={
+							<PartyAction
+								iconType={actionToIconTypeMap[playerAction]}
+								party='player'
+							/>
+						}
+						OpponentAction={<EmptyOpponentAction />}
+					/>
+				);
+				goToHousePickedStage();
+				break;
+			case GameStage.HOUSE_PICKED:
+				Board = (
+					<VersusBoard
+						PlayerAction={
+							<PartyAction
+								iconType={actionToIconTypeMap[playerAction]}
+								party='player'
+							/>
+						}
+						OpponentAction={
+							<PartyAction
+								iconType={actionToIconTypeMap[opponentAction]}
+								party='opponent'
+							/>
+						}
+					/>
+				);
+				goToResultStage();
+				break;
+			case GameStage.RESULT:
+				Board = (
+					<ResultBoard
+						PlayerAction={
+							<PartyAction
+								iconType={actionToIconTypeMap[playerAction]}
+								party='player'
+							/>
+						}
+						OpponentAction={
+							<PartyAction
+								iconType={actionToIconTypeMap[opponentAction]}
+								party='opponent'
+							/>
+						}
+						ResultDisplay={
+							gameResult !== null ? (
+								<ResultDisplay
+									onClick={handlePlayAgain}
+									result={gameResult}
+								/>
+							) : undefined
+						}
+					/>
+				);
+				break;
+			default:
+				return <></>;
+		}
+
+		return <GameBoardContainer>{Board}</GameBoardContainer>;
 	}
-
-	return <GameBoardContainer>{Board}</GameBoardContainer>;
-};
+);

@@ -41,9 +41,26 @@ class ActionNodeList {
 
 		return distance;
 	}
+	
+	findBackwardDistance(action1: Action, action2: Action) {
+		if (action1 === action2) {
+			return 0;
+		}
+
+		const action1Node = this.findNodeByAction(action1);
+		let current = action1Node;
+		let distance = 0;
+
+		while (current.action !== action2) {
+			current = current.previous as ActionNode;
+			distance++;
+		}
+
+		return distance;
+	}
 }
 
-const enum GameResult {
+export const enum GameResult {
 	WIN,
 	LOSE,
 	TIE,
@@ -68,18 +85,19 @@ class Game {
 	}
 
 	getResult(playerAction: Action, opponentAction: Action) {
-		if (playerAction === opponentAction) {
-			return GameResult.TIE;
-		}
-
 		if (
 			this.nodeList?.findForwardDistance(playerAction, opponentAction) === 1 ||
 			this.nodeList?.findForwardDistance(playerAction, opponentAction) === 3
 		) {
 			return GameResult.WIN;
-		} else {
+		} else if (
+			this.nodeList?.findBackwardDistance(playerAction, opponentAction) === 1 ||
+			this.nodeList?.findBackwardDistance(playerAction, opponentAction) === 3
+		) {
 			return GameResult.LOSE;
 		}
+
+		return GameResult.TIE;
 	}
 }
 

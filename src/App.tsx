@@ -11,7 +11,7 @@ function App() {
 	return (
 		<div className='App'>
 			<Header Logo={Logo} ScorePin={() => <ScorePin score={score} />} />
-			<GameBoard />
+			<GameBoard updateScore={setScore} />
 		</div>
 	);
 }
