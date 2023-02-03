@@ -14,3 +14,7 @@ Play Rock, Paper, Scissors, Lizard, Spock against the computer.
 -   Rock beats Scissors
 -   Lizard beats Paper
 -   Spock beats Rock
+
+## Device Experience
+
+Desktop web
