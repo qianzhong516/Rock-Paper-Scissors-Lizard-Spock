@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { InitialBoard } from './initial_board';
 import { ActionWithTitle } from '../action_icon/action_with_title';
 import { VersusBoard } from './versus_board';
@@ -7,7 +7,6 @@ import { IconType, Icon } from '../../base/icon/Icon';
 import styled from 'styled-components';
 import { GameResult, game } from '../../../game';
 import type { Action } from '../../../game';
-import { EmptyIconLarge } from '../action_icon/action_icon';
 import { ResultDisplay } from '../result_display/result_display';
 import React from 'react';
 
@@ -29,10 +28,6 @@ const PartyAction = ({
 		ActionIcon={<Icon type={iconType} size='large' />}
 		title={party === 'player' ? 'You picked' : 'The house picked'}
 	/>
-);
-
-const EmptyOpponentAction = () => (
-	<ActionWithTitle ActionIcon={<EmptyIconLarge />} title='The house picked' />
 );
 
 const GameBoardContainer = styled.div`
@@ -71,43 +66,59 @@ export const GameBoard = React.memo(
 		const [playerAction, setPlayerAction] = useState<Action>('scissors');
 		const [currentOpponentAction, setCurrentOpponentAction] =
 			useState<Action>('scissors');
-		const [finalOpponentAction, setFinalOpponentAction] =
-			useState<Action>('scissors');
+		const [finalOpponentAction, setFinalOpponentAction] = useState<Action>(
+			game.generateOpponentAction()
+		);
 		const [gameResult, setGameResult] = useState<GameResult | null>(null);
+		// status for the action rolling effect
+		const [isAnimationEnded, setIsAnimationEnded] = useState(false);
+
+		const goToGameResultStage = useCallback(() => {
+			const result = game.getResult(playerAction, finalOpponentAction);
+
+			setGameStage(GameStage.RESULT);
+			setGameResult(result);
+		}, [finalOpponentAction, playerAction]);
 
 		useEffect(() => {
 			if (gameStage === GameStage.HOUSE_PICKED) {
-				const computedOpponentAction = game.generateOpponentAction();
-
-				const goToGameResultStage = () => {
-					const result = game.getResult(
-						playerAction,
-						computedOpponentAction
-					);
-
-					setGameStage(GameStage.RESULT);
-					setGameResult(result);
-					setFinalOpponentAction(computedOpponentAction);
-				};
-
 				const id = setInterval(() => {
 					setCurrentOpponentAction((prev) => {
 						const nextIndex =
 							(game.actions.indexOf(prev) + 1) %
 							game.actions.length;
 						const currentAction = game.actions[nextIndex];
-						console.log('shuffle to: ', currentAction);
-						if (currentAction === computedOpponentAction) {
+
+						// let all the actions loop by one cycle
+						if (
+							currentAction ===
+							game.actions[game.actions.length - 1]
+						) {
+							setIsAnimationEnded(true);
+						}
+
+						// stop at the right action in the next cycle
+						if (
+							currentAction === finalOpponentAction &&
+							isAnimationEnded
+						) {
 							clearInterval(id);
 							goToGameResultStage();
 						}
 						return currentAction;
 					});
-				}, 300);
+				}, 200);
 
 				return () => clearInterval(id);
 			}
-		}, [gameStage, currentOpponentAction, playerAction]);
+		}, [
+			gameStage,
+			currentOpponentAction,
+			playerAction,
+			isAnimationEnded,
+			finalOpponentAction,
+			goToGameResultStage,
+		]);
 
 		useEffect(() => {
 			if (gameStage === GameStage.RESULT && gameResult != null) {
@@ -132,39 +143,21 @@ export const GameBoard = React.memo(
 
 		const onActionIconClick = (type: IconType) => {
 			setPlayerAction(iconTypeToActionMap[type]);
-			setGameStage(GameStage.PLAYER_PICKED);
-		};
-
-		const goToHousePickedStage = () => {
-			setTimeout(() => {
-				setCurrentOpponentAction(game.generateOpponentAction());
-				setGameStage(GameStage.HOUSE_PICKED);
-			}, 500);
+			setGameStage(GameStage.HOUSE_PICKED);
 		};
 
 		const handlePlayAgain = () => {
 			setGameResult(null);
+			setCurrentOpponentAction('scissors');
+			setIsAnimationEnded(false);
 			setGameStage(GameStage.INITIAL);
+			setFinalOpponentAction(game.generateOpponentAction());
 		};
 
 		let Board: React.ReactElement | undefined;
 		switch (gameStage) {
 			case GameStage.INITIAL:
 				Board = <InitialBoard onActionIconClick={onActionIconClick} />;
-				break;
-			case GameStage.PLAYER_PICKED:
-				Board = (
-					<VersusBoard
-						PlayerAction={
-							<PartyAction
-								iconType={actionToIconTypeMap[playerAction]}
-								party='player'
-							/>
-						}
-						OpponentAction={<EmptyOpponentAction />}
-					/>
-				);
-				goToHousePickedStage(); // TODO: remove this stage or move this line to `useEffect`
 				break;
 			case GameStage.HOUSE_PICKED:
 				Board = (
