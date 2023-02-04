@@ -30,6 +30,8 @@ const CircleOutlineStyleMap: Record<IconType, string> = {
 		'background-image: linear-gradient(to bottom, hsl(189, 59%, 53%), hsl(189, 58%, 57%))',
 };
 
+// TODO: have a map of size and multiplier, so icon visuals
+// can be easily adjusted on mobile devices
 const Circle = styled.div.attrs(
 	({ type, size = 'small', isEmpty }: ActionIconProps) => ({
 		size,

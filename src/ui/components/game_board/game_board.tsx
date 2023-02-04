@@ -69,31 +69,66 @@ export const GameBoard = React.memo(
 			GameStage.INITIAL
 		);
 		const [playerAction, setPlayerAction] = useState<Action>('scissors');
-		const [opponentAction, setOpponentAction] =
+		const [currentOpponentAction, setCurrentOpponentAction] =
 			useState<Action>('scissors');
-		const [isGameResultReady, setIsGameResultReady] = useState(false);
+		const [finalOpponentAction, setFinalOpponentAction] =
+			useState<Action>('scissors');
 		const [gameResult, setGameResult] = useState<GameResult | null>(null);
 
 		useEffect(() => {
-			if (!isGameResultReady || gameResult == null) {
-				return;
-			}
+			if (gameStage === GameStage.HOUSE_PICKED) {
+				const computedOpponentAction = game.generateOpponentAction();
 
-			const updateGameScore = (result: GameResult) => {
-				switch (result) {
-					case GameResult.LOSE:
-						updateScore((prev) => (prev - 1 < 0 ? 0 : prev - 1));
-						break;
-					case GameResult.WIN:
-						updateScore((prev) => prev + 1);
-						break;
-					case GameResult.TIE:
-					default:
-						break;
-				}
-			};
-			updateGameScore(gameResult);
-		}, [updateScore, isGameResultReady, gameResult]);
+				const goToGameResultStage = () => {
+					const result = game.getResult(
+						playerAction,
+						computedOpponentAction
+					);
+
+					setGameStage(GameStage.RESULT);
+					setGameResult(result);
+					setFinalOpponentAction(computedOpponentAction);
+				};
+
+				const id = setInterval(() => {
+					setCurrentOpponentAction((prev) => {
+						const nextIndex =
+							(game.actions.indexOf(prev) + 1) %
+							game.actions.length;
+						const currentAction = game.actions[nextIndex];
+						console.log('shuffle to: ', currentAction);
+						if (currentAction === computedOpponentAction) {
+							clearInterval(id);
+							goToGameResultStage();
+						}
+						return currentAction;
+					});
+				}, 300);
+
+				return () => clearInterval(id);
+			}
+		}, [gameStage, currentOpponentAction, playerAction]);
+
+		useEffect(() => {
+			if (gameStage === GameStage.RESULT && gameResult != null) {
+				const updateGameScore = (result: GameResult) => {
+					switch (result) {
+						case GameResult.LOSE:
+							updateScore((prev) =>
+								prev - 1 < 0 ? 0 : prev - 1
+							);
+							break;
+						case GameResult.WIN:
+							updateScore((prev) => prev + 1);
+							break;
+						case GameResult.TIE:
+						default:
+							break;
+					}
+				};
+				updateGameScore(gameResult);
+			}
+		}, [gameResult, gameStage, updateScore]);
 
 		const onActionIconClick = (type: IconType) => {
 			setPlayerAction(iconTypeToActionMap[type]);
@@ -102,22 +137,13 @@ export const GameBoard = React.memo(
 
 		const goToHousePickedStage = () => {
 			setTimeout(() => {
-				setOpponentAction(game.generateOpponentAction());
+				setCurrentOpponentAction(game.generateOpponentAction());
 				setGameStage(GameStage.HOUSE_PICKED);
-			}, 1000);
-		};
-
-		const goToResultStage = () => {
-			setTimeout(() => {
-				setGameResult(game.getResult(playerAction, opponentAction));
-				setIsGameResultReady(true);
-				setGameStage(GameStage.RESULT);
-			}, 1000);
+			}, 500);
 		};
 
 		const handlePlayAgain = () => {
 			setGameResult(null);
-			setIsGameResultReady(false);
 			setGameStage(GameStage.INITIAL);
 		};
 
@@ -138,7 +164,7 @@ export const GameBoard = React.memo(
 						OpponentAction={<EmptyOpponentAction />}
 					/>
 				);
-				goToHousePickedStage();
+				goToHousePickedStage(); // TODO: remove this stage or move this line to `useEffect`
 				break;
 			case GameStage.HOUSE_PICKED:
 				Board = (
@@ -151,13 +177,14 @@ export const GameBoard = React.memo(
 						}
 						OpponentAction={
 							<PartyAction
-								iconType={actionToIconTypeMap[opponentAction]}
+								iconType={
+									actionToIconTypeMap[currentOpponentAction]
+								}
 								party='opponent'
 							/>
 						}
 					/>
 				);
-				goToResultStage();
 				break;
 			case GameStage.RESULT:
 				Board = (
@@ -170,7 +197,9 @@ export const GameBoard = React.memo(
 						}
 						OpponentAction={
 							<PartyAction
-								iconType={actionToIconTypeMap[opponentAction]}
+								iconType={
+									actionToIconTypeMap[finalOpponentAction]
+								}
 								party='opponent'
 							/>
 						}

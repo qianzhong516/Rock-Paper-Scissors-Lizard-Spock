@@ -1,5 +1,6 @@
 import { Icon, IconType, EmptyIcon } from '../../base/icon/Icon';
 
+// TODO: make a util function to return a group of icons based on size
 export const ScissorsIconSmall = ({
 	onClick,
 }: {
