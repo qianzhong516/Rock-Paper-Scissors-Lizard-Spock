@@ -6,7 +6,7 @@ import { ResultBoard } from './result_board';
 import { IconType, Icon } from '../../base/icon/Icon';
 import styled from 'styled-components';
 import { GameResult, game } from '../../../game';
-import type { Action } from '../../../game';
+import { Action } from '../../../game';
 import { ResultDisplay } from '../result_display/result_display';
 import React from 'react';
 
@@ -39,19 +39,19 @@ const GameBoardContainer = styled.div`
 `;
 
 const actionToIconTypeMap: Record<Action, IconType> = {
-	scissors: IconType.SCISSORS,
-	paper: IconType.PAPER,
-	rock: IconType.ROCK,
-	lizard: IconType.LIZARD,
-	spock: IconType.SPOCK,
+	[Action.SCISSORS]: IconType.SCISSORS,
+	[Action.PAPER]: IconType.PAPER,
+	[Action.ROCK]: IconType.ROCK,
+	[Action.LIZARD]: IconType.LIZARD,
+	[Action.SPOCK]: IconType.SPOCK,
 };
 
 const iconTypeToActionMap: Record<IconType, Action> = {
-	[IconType.SCISSORS]: 'scissors',
-	[IconType.PAPER]: 'paper',
-	[IconType.ROCK]: 'rock',
-	[IconType.LIZARD]: 'lizard',
-	[IconType.SPOCK]: 'spock',
+	[IconType.SCISSORS]: Action.SCISSORS,
+	[IconType.PAPER]: Action.PAPER,
+	[IconType.ROCK]: Action.ROCK,
+	[IconType.LIZARD]: Action.LIZARD,
+	[IconType.SPOCK]: Action.SPOCK,
 };
 
 export const GameBoard = React.memo(
@@ -63,9 +63,11 @@ export const GameBoard = React.memo(
 		const [gameStage, setGameStage] = useState<GameStage>(
 			GameStage.INITIAL
 		);
-		const [playerAction, setPlayerAction] = useState<Action>('scissors');
+		const [playerAction, setPlayerAction] = useState<Action>(
+			Action.SCISSORS
+		);
 		const [currentOpponentAction, setCurrentOpponentAction] =
-			useState<Action>('scissors');
+			useState<Action>(Action.SCISSORS);
 		const [finalOpponentAction, setFinalOpponentAction] = useState<Action>(
 			game.generateOpponentAction()
 		);
@@ -148,7 +150,7 @@ export const GameBoard = React.memo(
 
 		const handlePlayAgain = () => {
 			setGameResult(null);
-			setCurrentOpponentAction('scissors');
+			setCurrentOpponentAction(Action.SCISSORS);
 			setIsAnimationEnded(false);
 			setGameStage(GameStage.INITIAL);
 			setFinalOpponentAction(game.generateOpponentAction());

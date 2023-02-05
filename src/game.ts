@@ -1,4 +1,12 @@
-export type Action = 'scissors' | 'paper' | 'rock' | 'lizard' | 'spock';
+export enum Action {
+    SCISSORS = 1,     
+    PAPER,    
+    ROCK, 
+    LIZARD,   
+    SPOCK,   
+}
+
+const ACTION_LENGTH = 5;
 
 class ActionNode {
 	constructor(
@@ -25,38 +33,19 @@ class ActionNodeList {
 		return current;
 	}
 
-	findForwardDistance(action1: Action, action2: Action) {
-		if (action1 === action2) {
-			return 0;
+	findDistance(actionFrom: Action, actionTo: Action, type: 'forward' | 'backward') {
+		switch (type) {
+			case 'forward':
+				return  this.getPositiveRemainder(actionTo - actionFrom, ACTION_LENGTH) ; 
+			case 'backward':
+				return this.getPositiveRemainder(actionFrom - actionTo, ACTION_LENGTH); 
+			default:
+				throw new Error('No such type.')
 		}
+	} 
 
-		const action1Node = this.findNodeByAction(action1);
-		let current = action1Node;
-		let distance = 0;
-
-		while (current.action !== action2) {
-			current = current.next as ActionNode;
-			distance++;
-		}
-
-		return distance;
-	}
-	
-	findBackwardDistance(action1: Action, action2: Action) {
-		if (action1 === action2) {
-			return 0;
-		}
-
-		const action1Node = this.findNodeByAction(action1);
-		let current = action1Node;
-		let distance = 0;
-
-		while (current.action !== action2) {
-			current = current.previous as ActionNode;
-			distance++;
-		}
-
-		return distance;
+	private getPositiveRemainder(num: number, actionLength: number) {
+		return num < 0 ? (num + actionLength) % actionLength : num % actionLength;
 	}
 }
 
@@ -68,7 +57,8 @@ export const enum GameResult {
 
 class Game {
 	nodeList: ActionNodeList | null;
-	readonly actions: Action[] = ['scissors', 'paper', 'rock', 'lizard', 'spock'];
+	readonly actions: Action[] = [Action.SCISSORS, Action.PAPER, Action.ROCK, Action.LIZARD, Action.SPOCK];
+
 
 	constructor() {
 		const nodes = this.actions.map((action) => new ActionNode(action));
@@ -86,13 +76,13 @@ class Game {
 
 	getResult(playerAction: Action, opponentAction: Action) {
 		if (
-			this.nodeList?.findForwardDistance(playerAction, opponentAction) === 1 ||
-			this.nodeList?.findForwardDistance(playerAction, opponentAction) === 3
+			this.nodeList?.findDistance(playerAction, opponentAction, 'forward') === 1 ||
+			this.nodeList?.findDistance(playerAction, opponentAction, 'forward') === 3
 		) {
 			return GameResult.WIN;
 		} else if (
-			this.nodeList?.findBackwardDistance(playerAction, opponentAction) === 1 ||
-			this.nodeList?.findBackwardDistance(playerAction, opponentAction) === 3
+			this.nodeList?.findDistance(playerAction, opponentAction, 'backward') === 1 ||
+			this.nodeList?.findDistance(playerAction, opponentAction, 'backward') === 3
 		) {
 			return GameResult.LOSE;
 		}
